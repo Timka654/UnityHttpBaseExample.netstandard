@@ -22,7 +22,7 @@ namespace Appfox.Unity.AspNetCore.WS.Extensions
         protected WSClient()
         {
             _hubConnection = new HubConnectionBuilder()
-                .WithUrl(GetUrl(),o => { o.AccessTokenProvider = () => Task.FromResult(GetAccessToken); })
+                .WithUrl(GetUrl(),o => { o.AccessTokenProvider = () => Task.FromResult(GetAccessToken()); })
                 .WithAutomaticReconnect(GetReconnectPolicy())
                 .Build();
 
