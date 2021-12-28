@@ -1,14 +1,13 @@
-using Appfox.Unity.AspNetCore.HTTP.Extensions;
+using Appfox.Unity.AspNetCore.Phantom;
 using Appfox.Unity.AspNetCore.WS.Extensions;
-using Microsoft.AspNetCore.SignalR.Client;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class WSExample : WSClient
 {
-    protected override string GetUrl() => "https://localhost:1234";
+    public static string token;
+
+    protected override string GetUrl() => "http://5.63.155.214/hubs/BattleHub";
 
     protected override WSRetryPolicy GetReconnectPolicy()
     {
@@ -24,15 +23,23 @@ public class WSExample : WSClient
 
     public WSExample() : base()
     {
-        Handle("abc", () =>
+        Handle<bool>("AuthorizeResult", (b) =>
         {
-            Debug.Log($"abc1432");
+            Debug.Log(b);
+        });
+        Handle<LobbyRoom>("SetData", (lobbyroom) =>
+        {
+            Debug.Log(lobbyroom);
         });
     }
-
 
     public static HubConnectionState State() => Instance.CurrentState;
 
     public static void Connect(Action<WSClient> action) => Instance.ConnectAsync(action);
+
+    protected override string GetAccessToken()
+    {
+        return token;
+    }
 
 }

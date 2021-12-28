@@ -11,7 +11,7 @@ namespace Appfox.Unity.AspNetCore.HTTP.Extensions
     {
         public HttpResponseMessage MessageResponse { get; set; }
 
-        public Dictionary<string, List<string>> ErrorMessages { get; set; }
+        public Dictionary<string, List<string>> ErrorMessages { get; set; } = new Dictionary<string, List<string>>();
 
         public BaseHttpRequestResult(HttpResponseMessage response)
         {
@@ -31,6 +31,17 @@ namespace Appfox.Unity.AspNetCore.HTTP.Extensions
         public void Dispose()
         {
             MessageResponse.Dispose();
+        }
+
+        public bool IsSuccess => MessageResponse.IsSuccessStatusCode;
+
+        public bool IsBadRequest => MessageResponse.StatusCode == System.Net.HttpStatusCode.BadRequest;
+
+        public IEnumerable<string> GetErrorMessages(string key = "")
+        {
+            ErrorMessages.TryGetValue(key, out var result);
+
+            return result ?? new List<string>();
         }
     }
 

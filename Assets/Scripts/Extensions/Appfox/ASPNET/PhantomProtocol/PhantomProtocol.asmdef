@@ -1,0 +1,27 @@
+{
+    "name": "PhantomProtocol",
+    "rootNamespace": "Appfox.Unity.AspNetCore.Phantom",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Cipher.dll",
+        "DBEngine.dll",
+        "SCL.dll",
+        "SCL.Unity.dll",
+        "SCLogger.dll",
+        "SocketCore.dll",
+        "SocketCore.Extensions.Buffer.dll",
+        "SocketCore.Extensions.Manager.dll",
+        "SocketCore.Extensions.Packet.dll",
+        "SocketCore.Extensions.Packet.FastEvent.dll",
+        "Utils.dll",
+        "Newtonsoft.Json.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

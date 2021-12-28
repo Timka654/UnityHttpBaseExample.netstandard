@@ -3,25 +3,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Appfox.Unity.AspNetCore.Phantom;
 using Appfox.Unity.Extensions;
-using Microsoft.AspNetCore.SignalR.Client;
 
 namespace Appfox.Unity.AspNetCore.WS.Extensions
 {
 
     public class WSClient : IDisposable
     {
-        protected virtual string GetUrl() => "ws://localhosts/hubs/hub";
+        protected virtual string GetUrl() => "http://localhosts/hubs/hub";
 
         protected virtual WSRetryPolicy GetReconnectPolicy() => WSRetryPolicy.CreateNone();
 
         protected virtual string GetAccessToken() => string.Empty;
 
-        HubConnection _hubConnection;
+        PhantomHubConnection _hubConnection;
 
         protected WSClient()
         {
-            _hubConnection = new HubConnectionBuilder()
+            _hubConnection = new PhantomHubConnectionBuilder()
                 .WithUrl(GetUrl(),o => { o.AccessTokenProvider = () => Task.FromResult(GetAccessToken()); })
                 .WithAutomaticReconnect(GetReconnectPolicy())
                 .Build();

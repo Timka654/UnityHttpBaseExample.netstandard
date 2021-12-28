@@ -1,19 +1,35 @@
 ﻿using Appfox.Unity.AspNetCore.HTTP.Extensions.Examples;
 using Appfox.Unity.Extensions;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Appfox.Unity.AspNetCore.HTTP.Extensions
 {
     internal class BaseWebRequestsExample : BaseWebRequests
     {
-        public override string GetBaseDomain() => "http://localhosts:1010/";
+        public override int GetTimeout() => 100000;
+        public override string GetBaseDomain() => "http://localhost:5151";
 
-        public const string SignInUrl = "User/SignIn";
+        public const string SignUpUrl = "/Account/Register";
+        public const string SignInUrl = "/Account/Login";
+        public const string JoinLobbyUrl = "Lobby/JoinLobby";
+
+        /*public static async void SignUp(CreateAccountQueryModel query, WebResponseDelegate<CreateAccountQueryModel, string> onResult)
+            => await SafeInvoke(Instance.SafeRequest<string>(SignUpUrl, message =>
+               message.SetRequestBody(query)), result =>
+               {
+                   if (result.MessageResponse.IsSuccessStatusCode)
+                       Instance.SetDefaultHeader("Authorization", $"Bearer {result.Data}");
+                   onResult(query, result);
+               });*/
+
+        public static async void SignUp(CreateAccountQueryModel query, Action<HttpRequestResult<string>> onResult)
+        => await SafeInvoke<string>(Instance.SafeRequest<string>(SignUpUrl, (message) => message.SetRequestBody(query)), result =>
+        {
+            if (result.MessageResponse.IsSuccessStatusCode)
+                Instance.SetDefaultHeader("Authorization", $"Bearer { result.Data }");
+
+            onResult(result);
+        });
 
         public static async void PasswordSignInSample3(PasswordSignInRequestModel query, Action<HttpRequestResult<string>> onResult)
         => await SafeInvoke<string>(Instance.SafeRequest<string>(SignInUrl, (message) => message.SetRequestBody(query)), result =>
@@ -50,6 +66,12 @@ namespace Appfox.Unity.AspNetCore.HTTP.Extensions
 
             Instance.FreeClient(client, result);
         }
+
+        public static async void JoinLobby(int query, Action<HttpRequestResult<string>> onResult)
+        => await SafeInvoke(Instance.SafeRequest<string>(JoinLobbyUrl, (message) => message.SetRequestBody(query)), result =>
+        {
+            onResult(result);
+        });
 
         private static BaseWebRequestsExample Instance;
 
