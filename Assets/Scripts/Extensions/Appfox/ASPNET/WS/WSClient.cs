@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Appfox.Unity.AspNetCore.Phantom;
 using Appfox.Unity.Extensions;
+using UnityEngine;
 
 namespace Appfox.Unity.AspNetCore.WS.Extensions
 {
@@ -22,7 +23,7 @@ namespace Appfox.Unity.AspNetCore.WS.Extensions
         protected WSClient()
         {
             _hubConnection = new PhantomHubConnectionBuilder()
-                .WithUrl(GetUrl(),o => { o.AccessTokenProvider = () => Task.FromResult(GetAccessToken()); })
+                .WithUrl(GetUrl(), o => { o.AccessTokenProvider = () => Task.FromResult(GetAccessToken()); })
                 .WithAutomaticReconnect(GetReconnectPolicy())
                 .Build();
 
@@ -76,12 +77,24 @@ namespace Appfox.Unity.AspNetCore.WS.Extensions
 
         public void Handle<T1>(string methodName, Action<T1> args)
         {
-            _hubConnection.On<T1>(methodName, args);
+            _hubConnection.On<T1>(methodName, p1 =>
+            {
+                ThreadHelper.AddAction(() =>
+               {
+                   args(p1);
+               });
+            });
         }
 
         public void Handle(string methodName, Action args)
         {
-            _hubConnection.On(methodName, args);
+            _hubConnection.On(methodName, () =>
+            {
+                ThreadHelper.AddAction(() =>
+                {
+                    args();
+                });
+            });
         }
 
         public async void SendAsync(string methodName)
@@ -110,7 +123,8 @@ namespace Appfox.Unity.AspNetCore.WS.Extensions
 
         protected virtual void OnClosed(Exception ex)
         {
-
+            if (ex != null)
+                Debug.LogException(ex);
         }
 
         protected virtual void OnReconnecting(Exception ex)

@@ -1,0 +1,60 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v6.0/nestandard2.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v6.0": {},
+    ".NETCoreApp,Version=v6.0/nestandard2.0": {
+      "SocketPhantom/1.0.0": {
+        "dependencies": {
+          "Cipher_Debug": "2021.12.28.1525"
+        },
+        "runtime": {
+          "SocketPhantom.dll": {}
+        }
+      },
+      "Cipher_Debug/2021.12.28.1525": {
+        "dependencies": {
+          "SocketCore_Debug": "2021.12.28.1525"
+        },
+        "runtime": {
+          "lib/net5.0/Cipher.dll": {
+            "assemblyVersion": "2021.12.28.1525",
+            "fileVersion": "2021.12.28.1525"
+          }
+        }
+      },
+      "SocketCore_Debug/2021.12.28.1525": {
+        "runtime": {
+          "lib/net5.0/SocketCore.dll": {
+            "assemblyVersion": "2021.12.28.1525",
+            "fileVersion": "2021.12.28.1525"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "SocketPhantom/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Cipher_Debug/2021.12.28.1525": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ylkmN0/PbtbOWPtL1dyTVJrvZWC+DtBKL/n6Ww8nY+EI5SvJySXrnAu26qxV9bL2Z7/WNuWVOoG/ydcGlbs5zg==",
+      "path": "cipher_debug/2021.12.28.1525",
+      "hashPath": "cipher_debug.2021.12.28.1525.nupkg.sha512"
+    },
+    "SocketCore_Debug/2021.12.28.1525": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-MoLsT23WSp/ZI8wvOsaogwFer4abpM/3cnd7TC/l7e4Knw5lSgdB2+4guBtVOESu2T9fEiE19KA4ehA/1Eq8fQ==",
+      "path": "socketcore_debug/2021.12.28.1525",
+      "hashPath": "socketcore_debug.2021.12.28.1525.nupkg.sha512"
+    }
+  }
+}

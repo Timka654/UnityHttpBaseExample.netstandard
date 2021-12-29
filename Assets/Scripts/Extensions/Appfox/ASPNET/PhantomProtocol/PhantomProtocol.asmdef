@@ -18,7 +18,8 @@
         "SocketCore.Extensions.Packet.dll",
         "SocketCore.Extensions.Packet.FastEvent.dll",
         "Utils.dll",
-        "Newtonsoft.Json.dll"
+        "Newtonsoft.Json.dll",
+        "SocketPhantom.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],
