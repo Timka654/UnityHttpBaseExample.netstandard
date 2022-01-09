@@ -43,6 +43,30 @@ namespace Appfox.Unity.AspNetCore.HTTP.Extensions
 
         public void FreeClient(HttpClient client, HttpResponseMessage response = null) => clientPool.FreeClient(client, response);
 
+        public void FreeClient(HttpClient client) => clientPool.FreeClient(client);
+
+        protected async Task SafeRequest(string url, WebResponseDelegate onResult, Action<HttpRequestMessage> request)
+        {
+            var client = await GetClient();
+
+            var result = await SafeRequest(client, url, request);
+
+            FreeClient(client);
+
+            SafeInvoke(result, onResult);
+        }
+
+        protected async Task SafeRequest<TData>(string url, WebResponseDelegate<TData> onResult, Action<HttpRequestMessage> request = null)
+        {
+            var client = await GetClient();
+
+            var result = await SafeRequest<TData>(client, url, request);
+
+            FreeClient(client);
+
+            SafeInvoke(result, onResult);
+        }
+
         protected async Task<HttpRequestResult> SafeRequest(string url, Action<HttpRequestMessage> request, bool dispose = false)
         {
             var client = await GetClient();
@@ -173,10 +197,20 @@ namespace Appfox.Unity.AspNetCore.HTTP.Extensions
                       $"{ Environment.StackTrace }");
         }
 
+        protected static void SafeInvoke(HttpRequestResult result, WebResponseDelegate onResult)
+        {
+            ThreadHelper.AddAction(() => onResult(result));
+        }
+
         protected static async Task SafeInvoke(Task<HttpRequestResult> request, WebResponseDelegate onResult)
         {
             var result = await request;
 
+            ThreadHelper.AddAction(() => onResult(result));
+        }
+
+        protected static void SafeInvoke<TData>(HttpRequestResult<TData> result, WebResponseDelegate<TData> onResult)
+        {
             ThreadHelper.AddAction(() => onResult(result));
         }
 
