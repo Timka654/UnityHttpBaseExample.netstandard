@@ -17,7 +17,6 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using UnityEditor.MPE;
 using UnityEngine;
 namespace Appfox.Unity.AspNetCore.Phantom
 {

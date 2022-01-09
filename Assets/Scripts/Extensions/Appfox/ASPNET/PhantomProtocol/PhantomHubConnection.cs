@@ -47,9 +47,9 @@ namespace Appfox.Unity.AspNetCore.Phantom
             set;
         } = DefaultHandshakeTimeout;
 
-        public event Func<Exception?, Task> Closed = (_) => Task.CompletedTask;
-        public event Func<string?, Task> Reconnected = (_) => Task.CompletedTask;
-        public event Func<Exception?, Task> Reconnecting = (_) => Task.CompletedTask;
+        public event Func<Exception, Task> Closed = (_) => Task.CompletedTask;
+        public event Func<string, Task> Reconnected = (_) => Task.CompletedTask;
+        public event Func<Exception, Task> Reconnecting = (_) => Task.CompletedTask;
 
         private HubConnectionState state = HubConnectionState.Disconnected;
 
