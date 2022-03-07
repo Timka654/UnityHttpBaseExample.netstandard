@@ -7,11 +7,21 @@ namespace Appfox.Unity.Extensions
 {
     public class ThreadHelper : MonoBehaviour
     {
+        private static ThreadHelper instance;
+
         private static ConcurrentQueue<Action> queue = new ConcurrentQueue<Action>();
 
         private void Awake()
         {
-            DontDestroyOnLoad(this.gameObject);
+            if (instance == null)
+            {
+                instance = this;
+                DontDestroyOnLoad(gameObject);
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
         }
 
         public void Update()

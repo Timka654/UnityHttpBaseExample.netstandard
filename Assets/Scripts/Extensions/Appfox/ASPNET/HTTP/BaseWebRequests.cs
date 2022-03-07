@@ -2,6 +2,7 @@
 using Appfox.Unity.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -45,7 +46,7 @@ namespace Appfox.Unity.AspNetCore.HTTP.Extensions
 
         public void FreeClient(HttpClient client) => clientPool.FreeClient(client);
 
-        protected async Task SafeRequest(string url, WebResponseDelegate onResult, Action<HttpRequestMessage> request)
+        protected async void SafeRequest(string url, WebResponseDelegate onResult, Action<HttpRequestMessage> request)
         {
             var client = await GetClient();
 
@@ -56,7 +57,7 @@ namespace Appfox.Unity.AspNetCore.HTTP.Extensions
             SafeInvoke(result, onResult);
         }
 
-        protected async Task SafeRequest<TData>(string url, WebResponseDelegate<TData> onResult, Action<HttpRequestMessage> request = null)
+        protected async void SafeRequest<TData>(string url, WebResponseDelegate<TData> onResult, Action<HttpRequestMessage> request = null)
         {
             var client = await GetClient();
 
@@ -184,17 +185,48 @@ namespace Appfox.Unity.AspNetCore.HTTP.Extensions
             await LogRequestResult(result, resultContent);
 
         }
-        protected virtual async Task LogRequestResult(HttpResponseMessage result, string content)
+        protected virtual async Task LogRequestResult(HttpResponseMessage result, string responseContent)
         {
             if (!GetLogging())
                 return;
 
-            Debug.Log($"RequestUri = { result.RequestMessage.RequestUri }\r\n" +
-                      (result.RequestMessage.Content is StringContent sc ? $"RequestContent = { await sc.ReadAsStringAsync() }\r\n" : "") +
-                      $"ResultCode = { result.StatusCode }\r\n" +
-                      $"ResponseContent = { content }\r\n" +
-                      $"================STACK TRACE================\r\n" +
-                      $"{ Environment.StackTrace }");
+            var requestUriLine = $"RequestUri = { result.RequestMessage.RequestUri }\r\n";
+            var requestContentLine = result.RequestMessage.Content is StringContent sc ? $"RequestContent = { await sc.ReadAsStringAsync() }\r\n" : string.Empty;
+            var resultStatusCodeLine = $"ResultCode = { result.StatusCode }\r\n";
+
+            if (responseContent != null)
+            {
+                if (responseContent.Length < 10_000)
+                {
+                    Debug.Log(requestUriLine + requestContentLine + resultStatusCodeLine +
+                              $"ResponseContent = { responseContent }\r\n" +
+                              $"================STACK TRACE================\r\n" +
+                              $"{ Environment.StackTrace }");
+                }
+                else
+                {
+
+                    Debug.Log(requestUriLine + requestContentLine + resultStatusCodeLine +
+                              $"ResponseContent = ");
+
+                    IEnumerable<char> charCollection = responseContent;
+
+                    do
+                    {
+                        Debug.Log(new string(charCollection.Take(10_000).ToArray()));
+
+                        charCollection = charCollection.Skip(10_000);
+                    } while (charCollection.Any());
+
+                    Debug.Log($"================STACK TRACE================\r\n" +
+                              $"{ Environment.StackTrace }");
+                }
+            }
+            else
+                Debug.Log(requestUriLine + requestContentLine + resultStatusCodeLine +
+                          $"================STACK TRACE================\r\n" +
+                          $"{ Environment.StackTrace }");
+
         }
 
         protected static void SafeInvoke(HttpRequestResult result, WebResponseDelegate onResult)

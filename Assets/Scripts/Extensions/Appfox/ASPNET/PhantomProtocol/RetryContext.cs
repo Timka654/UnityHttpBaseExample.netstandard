@@ -20,7 +20,7 @@ namespace Appfox.Unity.AspNetCore.Phantom
             set;
         }
 
-        public Exception RetryReason
+        public Exception? RetryReason
         {
             get;
             set;
