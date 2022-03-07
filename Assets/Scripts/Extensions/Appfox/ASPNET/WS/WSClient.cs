@@ -4,12 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Appfox.Unity.AspNetCore.Phantom;
-using Appfox.Unity.Extensions;
+using SCL.Unity;
 using UnityEngine;
 
 namespace Appfox.Unity.AspNetCore.WS.Extensions
 {
-
     public class WSClient : IDisposable
     {
         protected virtual string GetUrl() => "http://localhosts/hubs/hub";
@@ -27,11 +26,11 @@ namespace Appfox.Unity.AspNetCore.WS.Extensions
                 .WithAutomaticReconnect(GetReconnectPolicy())
                 .Build();
 
-            _hubConnection.Closed += (e) => { ThreadHelper.AddAction(() => OnClosed(e)); return Task.CompletedTask; };
+            _hubConnection.Closed += (e) => { ThreadHelper.InvokeOnMain(() => OnClosed(e)); return Task.CompletedTask; };
 
-            _hubConnection.Reconnected += (e) => { ThreadHelper.AddAction(() => OnReconnected(e)); return Task.CompletedTask; };
+            _hubConnection.Reconnected += (e) => { ThreadHelper.InvokeOnMain(() => OnReconnected(e)); return Task.CompletedTask; };
 
-            _hubConnection.Reconnecting += (e) => { ThreadHelper.AddAction(() => OnReconnecting(e)); return Task.CompletedTask; };
+            _hubConnection.Reconnecting += (e) => { ThreadHelper.InvokeOnMain(() => OnReconnecting(e)); return Task.CompletedTask; };
         }
 
         public async Task Connect()
@@ -42,7 +41,7 @@ namespace Appfox.Unity.AspNetCore.WS.Extensions
             }
             catch (Exception e)
             {
-                ThreadHelper.AddAction(() => OnClosed(e));
+                ThreadHelper.InvokeOnMain(() => OnClosed(e));
             }
         }
 
@@ -54,7 +53,7 @@ namespace Appfox.Unity.AspNetCore.WS.Extensions
         public async void ConnectAsync(Action<WSClient> afterConnect)
         {
             await Connect();
-            ThreadHelper.AddAction(() => afterConnect(this));
+            ThreadHelper.InvokeOnMain(() => afterConnect(this));
         }
 
         public Task Disconnect() => _hubConnection.StopAsync();
@@ -67,19 +66,19 @@ namespace Appfox.Unity.AspNetCore.WS.Extensions
         public async void DisconnectAsync(Action<WSClient> afterDisconnect)
         {
             await Disconnect();
-            ThreadHelper.AddAction(() => afterDisconnect(this));
+            ThreadHelper.InvokeOnMain(() => afterDisconnect(this));
         }
 
-        public void Dispose()
+        public async void Dispose()
         {
-            _hubConnection.DisposeAsync();
+            await _hubConnection.DisposeAsync();
         }
 
         public void Handle<T1>(string methodName, Action<T1> args)
         {
             _hubConnection.On<T1>(methodName, p1 =>
             {
-                ThreadHelper.AddAction(() =>
+                ThreadHelper.InvokeOnMain(() =>
                {
                    args(p1);
                });
@@ -90,7 +89,7 @@ namespace Appfox.Unity.AspNetCore.WS.Extensions
         {
             _hubConnection.On(methodName, () =>
             {
-                ThreadHelper.AddAction(() =>
+                ThreadHelper.InvokeOnMain(() =>
                 {
                     args();
                 });
@@ -110,13 +109,13 @@ namespace Appfox.Unity.AspNetCore.WS.Extensions
         public async void SendAsync(string methodName, Action<WSClient> afterSend)
         {
             await _hubConnection.SendAsync(methodName);
-            ThreadHelper.AddAction(() => afterSend(this));
+            ThreadHelper.InvokeOnMain(() => afterSend(this));
         }
 
         public async void SendAsync<TData>(string methodName, TData data, Action<WSClient, TData> afterSend)
         {
             await _hubConnection.SendAsync(methodName, data);
-            ThreadHelper.AddAction(() => afterSend(this, data));
+            ThreadHelper.InvokeOnMain(() => afterSend(this, data));
         }
 
         public HubConnectionState CurrentState => _hubConnection.State;

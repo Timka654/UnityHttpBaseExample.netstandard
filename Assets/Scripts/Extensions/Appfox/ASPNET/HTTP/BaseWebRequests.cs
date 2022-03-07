@@ -1,5 +1,5 @@
 ﻿using Appfox.Unity.AspNetCore.HTTP.Extensions;
-using Appfox.Unity.Extensions;
+using SCL.Unity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -231,40 +231,40 @@ namespace Appfox.Unity.AspNetCore.HTTP.Extensions
 
         protected static void SafeInvoke(HttpRequestResult result, WebResponseDelegate onResult)
         {
-            ThreadHelper.AddAction(() => onResult(result));
+            ThreadHelper.InvokeOnMain(() => onResult(result));
         }
 
         protected static async Task SafeInvoke(Task<HttpRequestResult> request, WebResponseDelegate onResult)
         {
             var result = await request;
 
-            ThreadHelper.AddAction(() => onResult(result));
+            ThreadHelper.InvokeOnMain(() => onResult(result));
         }
 
         protected static void SafeInvoke<TData>(HttpRequestResult<TData> result, WebResponseDelegate<TData> onResult)
         {
-            ThreadHelper.AddAction(() => onResult(result));
+            ThreadHelper.InvokeOnMain(() => onResult(result));
         }
 
         protected static async Task SafeInvoke<TData>(Task<HttpRequestResult<TData>> request, WebResponseDelegate<TData> onResult)
         {
             var result = await request;
 
-            ThreadHelper.AddAction(() => onResult(result));
+            ThreadHelper.InvokeOnMain(() => onResult(result));
         }
 
         protected static async Task SafeInvoke<TRequest, TData>(TRequest requestData, Task<HttpRequestResult<TData>> request, WebResponseDelegate<TRequest, TData> onResult)
         {
             var result = await request;
 
-            ThreadHelper.AddAction(() => onResult(requestData, result));
+            ThreadHelper.InvokeOnMain(() => onResult(requestData, result));
         }
 
         protected static async Task SafeInvoke<TRequest>(TRequest requestData, Task<HttpRequestResult> request, Action<TRequest, HttpRequestResult> onResult)
         {
             var result = await request;
 
-            ThreadHelper.AddAction(() => onResult(requestData, result));
+            ThreadHelper.InvokeOnMain(() => onResult(requestData, result));
         }
 
         protected BaseWebRequests()

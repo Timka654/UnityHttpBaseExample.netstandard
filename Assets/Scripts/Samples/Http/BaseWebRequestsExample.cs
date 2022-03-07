@@ -1,5 +1,5 @@
 ﻿using Appfox.Unity.AspNetCore.HTTP.Extensions.Examples;
-using Appfox.Unity.Extensions;
+using SCL.Unity;
 using System;
 
 namespace Appfox.Unity.AspNetCore.HTTP.Extensions
@@ -47,7 +47,7 @@ namespace Appfox.Unity.AspNetCore.HTTP.Extensions
             if (result.MessageResponse.IsSuccessStatusCode)
                 Instance.SetDefaultHeader("Authorization", $"Bearer { result.Data }");
 
-            ThreadHelper.AddAction(() => onResult(result));
+            ThreadHelper.InvokeOnMain(() => onResult(result));
         }
 
         public static async void PasswordSignInSample1(PasswordSignInRequestModel query, Action<HttpRequestResult<string>> onResult)
@@ -62,7 +62,7 @@ namespace Appfox.Unity.AspNetCore.HTTP.Extensions
             if (result.MessageResponse.IsSuccessStatusCode)
                 Instance.SetDefaultHeader("Authorization", $"Bearer { result.Data }");
 
-            ThreadHelper.AddAction(() => onResult(result));
+            ThreadHelper.InvokeOnMain(() => onResult(result));
 
             Instance.FreeClient(client, result);
         }
