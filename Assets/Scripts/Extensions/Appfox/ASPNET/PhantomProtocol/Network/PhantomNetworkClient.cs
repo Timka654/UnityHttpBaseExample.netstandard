@@ -32,13 +32,6 @@ namespace Appfox.Unity.AspNetCore.Phantom.Network
 
             var ip = IPAddress.Parse(dns.ToString());
 
-            clientOptions.ProtocolType = System.Net.Sockets.ProtocolType.Tcp;
-            clientOptions.AddressFamily = ip.AddressFamily;
-            clientOptions.IpAddress = ip.ToString();
-            clientOptions.Port = connectUrl.Port;
-
-            clientOptions.ReceiveBufferSize = 1024;
-
             clientOptions.OnClientConnectEvent += ClientOptions_OnClientConnectEvent;
             clientOptions.OnClientDisconnectEvent += ClientOptions_OnClientDisconnectEvent;
             clientOptions.OnExceptionEvent += ClientOptions_OnExceptionEvent;
@@ -50,7 +43,8 @@ namespace Appfox.Unity.AspNetCore.Phantom.Network
 
             client = new SocketClient<PhantomSocketNetworkClient, ClientOptions<PhantomSocketNetworkClient>>(clientOptions);
 
-            await client.ConnectAsync();
+            await client.ConnectAsync(ip.ToString(),
+            clientOptions.Port = connectUrl.Port,(int)phantomHubConnection.ConnectionTimeout.TotalMilliseconds);
         }
 
         internal int retryCount = 0;
