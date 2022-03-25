@@ -19,18 +19,18 @@ namespace Appfox.Unity.AspNetCore.WS.Extensions
 
         PhantomHubConnection _hubConnection;
 
+        public HubConnectionState CurrentState => _hubConnection.State;
+
         protected WSClient()
         {
             _hubConnection = new PhantomHubConnectionBuilder()
-                .WithUrl(GetUrl(), o => { o.AccessTokenProvider = () => Task.FromResult(GetAccessToken()); })
-                .WithAutomaticReconnect(GetReconnectPolicy())
+                .WithUrl(GetUrl, o => { o.AccessTokenProvider = () => Task.FromResult(GetAccessToken()); })
+                .WithAutomaticReconnect(GetReconnectPolicy)
                 .Build();
 
-            _hubConnection.Closed += (e) => { ThreadHelper.InvokeOnMain(() => OnClosed(e)); return Task.CompletedTask; };
+            _hubConnection.OnException += (e) => { ThreadHelper.InvokeOnMain(() => OnException(e)); return Task.CompletedTask; };
 
-            _hubConnection.Reconnected += (e) => { ThreadHelper.InvokeOnMain(() => OnReconnected(e)); return Task.CompletedTask; };
-
-            _hubConnection.Reconnecting += (e) => { ThreadHelper.InvokeOnMain(() => OnReconnecting(e)); return Task.CompletedTask; };
+            _hubConnection.StateChanged += (e) => ThreadHelper.InvokeOnMain(() => StateChanged(e));
         }
 
         public async Task Connect()
@@ -41,14 +41,12 @@ namespace Appfox.Unity.AspNetCore.WS.Extensions
             }
             catch (Exception e)
             {
-                ThreadHelper.InvokeOnMain(() => OnClosed(e));
+                ThreadHelper.InvokeOnMain(() => OnException(e));
             }
         }
 
         public async void ConnectAsync()
-        {
-            await Connect();
-        }
+            => await Connect();
 
         public async void ConnectAsync(Action<WSClient> afterConnect)
         {
@@ -56,22 +54,17 @@ namespace Appfox.Unity.AspNetCore.WS.Extensions
             ThreadHelper.InvokeOnMain(() => afterConnect(this));
         }
 
-        public Task Disconnect() => _hubConnection.StopAsync();
+        #region On(Handle)
 
-        public async void DisconnectAsync()
+        public void Handle(string methodName, Action args)
         {
-            await Disconnect();
-        }
-
-        public async void DisconnectAsync(Action<WSClient> afterDisconnect)
-        {
-            await Disconnect();
-            ThreadHelper.InvokeOnMain(() => afterDisconnect(this));
-        }
-
-        public async void Dispose()
-        {
-            await _hubConnection.DisposeAsync();
+            _hubConnection.On(methodName, () =>
+            {
+                ThreadHelper.InvokeOnMain(() =>
+                {
+                    args();
+                });
+            });
         }
 
         public void Handle<T1>(string methodName, Action<T1> args)
@@ -85,26 +78,48 @@ namespace Appfox.Unity.AspNetCore.WS.Extensions
             });
         }
 
-        public void Handle(string methodName, Action args)
+        public void Handle<T1, T2>(string methodName, Action<T1, T2> args)
         {
-            _hubConnection.On(methodName, () =>
+            _hubConnection.On<T1, T2>(methodName, (p1, p2) =>
+             {
+                 ThreadHelper.InvokeOnMain(() =>
+                {
+                    args(p1, p2);
+                });
+             });
+        }
+
+        public void Handle<T1, T2, T3>(string methodName, Action<T1, T2, T3> args)
+        {
+            _hubConnection.On<T1, T2, T3>(methodName, (p1, p2, p3) =>
             {
                 ThreadHelper.InvokeOnMain(() =>
                 {
-                    args();
+                    args(p1, p2, p3);
                 });
             });
         }
 
-        public async void SendAsync(string methodName)
+        public void Handle<T1, T2, T3, T4>(string methodName, Action<T1, T2, T3, T4> args)
         {
-            await _hubConnection.SendAsync(methodName);
+            _hubConnection.On<T1, T2, T3, T4>(methodName, (p1, p2, p3, p4) =>
+            {
+                ThreadHelper.InvokeOnMain(() =>
+                {
+                    args(p1, p2, p3, p4);
+                });
+            });
         }
 
-        public async void SendAsync<TData>(string methodName, TData data)
-        {
-            await _hubConnection.SendAsync(methodName, data);
-        }
+        #endregion
+
+        #region Send
+
+        public async void SendAsync(string methodName)
+            => await _hubConnection.SendAsync(methodName);
+
+        public async void SendAsync(string methodName, params object[] data)
+            => await _hubConnection.SendAsync(methodName, data);
 
         public async void SendAsync(string methodName, Action<WSClient> afterSend)
         {
@@ -112,28 +127,36 @@ namespace Appfox.Unity.AspNetCore.WS.Extensions
             ThreadHelper.InvokeOnMain(() => afterSend(this));
         }
 
-        public async void SendAsync<TData>(string methodName, TData data, Action<WSClient, TData> afterSend)
+        public async void SendAsync(string methodName, Action<WSClient, object[]> afterSend, params object[] data)
         {
             await _hubConnection.SendAsync(methodName, data);
             ThreadHelper.InvokeOnMain(() => afterSend(this, data));
         }
 
-        public HubConnectionState CurrentState => _hubConnection.State;
+        #endregion
 
-        protected virtual void OnClosed(Exception ex)
+        public Task Disconnect() => _hubConnection.StopAsync();
+
+        public async void DisconnectAsync()
+            => await Disconnect();
+
+        public async void DisconnectAsync(Action<WSClient> afterDisconnect)
+        {
+            await Disconnect();
+
+            ThreadHelper.InvokeOnMain(() => afterDisconnect(this));
+        }
+
+        public async void Dispose()
+            => await _hubConnection.DisposeAsync();
+
+        protected virtual void OnException(Exception ex)
         {
             if (ex != null)
                 Debug.LogException(ex);
         }
 
-        protected virtual void OnReconnecting(Exception ex)
-        {
-
-        }
-
-        protected virtual void OnReconnected(string ex)
-        {
-
-        }
+        protected virtual void StateChanged(HubConnectionState state)
+            => Debug.LogWarning($"{nameof(StateChanged)} - {state}");
     }
 }

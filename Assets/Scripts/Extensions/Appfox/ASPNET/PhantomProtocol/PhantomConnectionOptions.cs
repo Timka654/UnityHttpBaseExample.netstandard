@@ -9,7 +9,7 @@ namespace Appfox.Unity.AspNetCore.Phantom
 {
     public class PhantomConnectionOptions
     {
-        public string Url { get; set; }
+        public Func<Task<string>> Url { get; set; }
 
         public Func<Task<string>> AccessTokenProvider { get; set; }
 
@@ -21,6 +21,6 @@ namespace Appfox.Unity.AspNetCore.Phantom
 
         public PhantomCipherProvider CipherProvider { get; set; } = new NonePhantomCipherProvider();
 
-        public IRetryPolicy RetryPolicy { get; set; }
+        public Func<Task<IRetryPolicy>> RetryPolicy { get; set; }
     }
 }

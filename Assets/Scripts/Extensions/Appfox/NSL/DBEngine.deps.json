@@ -7,7 +7,7 @@
   "targets": {
     ".NETStandard,Version=v2.0": {},
     ".NETStandard,Version=v2.0/": {
-      "DBEngine/2021.12.28.0135": {
+      "DBEngine/2022.03.25.0358": {
         "dependencies": {
           "NETStandard.Library": "2.0.3"
         },
@@ -24,7 +24,7 @@
     }
   },
   "libraries": {
-    "DBEngine/2021.12.28.0135": {
+    "DBEngine/2022.03.25.0358": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

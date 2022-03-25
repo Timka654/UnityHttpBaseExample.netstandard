@@ -9,7 +9,6 @@
     "precompiledReferences": [
         "Cipher.dll",
         "DBEngine.dll",
-        "SCL.dll",
         "SCL.Unity.dll",
         "SCLogger.dll",
         "SocketCore.dll",
@@ -19,7 +18,10 @@
         "SocketCore.Extensions.Packet.FastEvent.dll",
         "Utils.dll",
         "Newtonsoft.Json.dll",
-        "SocketPhantom.dll"
+        "SocketPhantom.dll",
+        "NSL.TCP.Client.dll",
+        "NSL.TCP.dll",
+        "SocketClient.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],

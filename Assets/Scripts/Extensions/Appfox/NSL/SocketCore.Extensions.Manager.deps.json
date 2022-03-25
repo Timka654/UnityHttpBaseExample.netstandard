@@ -7,10 +7,10 @@
   "targets": {
     ".NETStandard,Version=v2.0": {},
     ".NETStandard,Version=v2.0/": {
-      "SocketCore.Extensions.Manager/2021.12.28.0135": {
+      "SocketCore.Extensions.Manager/2022.03.25.0358": {
         "dependencies": {
           "NETStandard.Library": "2.0.3",
-          "SCLogger": "2021.12.28.135"
+          "SCLogger": "2022.3.25.358"
         },
         "runtime": {
           "SocketCore.Extensions.Manager.dll": {}
@@ -30,31 +30,31 @@
           }
         }
       },
-      "Cipher/2021.12.28.135": {
+      "Cipher/2022.3.25.358": {
         "dependencies": {
-          "SocketCore": "2021.12.28.135"
+          "SocketCore": "2022.3.25.358"
         },
         "runtime": {
           "Cipher.dll": {}
         }
       },
-      "SCLogger/2021.12.28.135": {
+      "SCLogger/2022.3.25.358": {
         "dependencies": {
-          "SocketCore": "2021.12.28.135",
-          "Utils": "2021.12.28.135"
+          "SocketCore": "2022.3.25.358",
+          "Utils": "2022.3.25.358"
         },
         "runtime": {
           "SCLogger.dll": {}
         }
       },
-      "SocketCore/2021.12.28.135": {
+      "SocketCore/2022.3.25.358": {
         "runtime": {
           "SocketCore.dll": {}
         }
       },
-      "Utils/2021.12.28.135": {
+      "Utils/2022.3.25.358": {
         "dependencies": {
-          "Cipher": "2021.12.28.135",
+          "Cipher": "2022.3.25.358",
           "Newtonsoft.Json": "12.0.1"
         },
         "runtime": {
@@ -64,7 +64,7 @@
     }
   },
   "libraries": {
-    "SocketCore.Extensions.Manager/2021.12.28.0135": {
+    "SocketCore.Extensions.Manager/2022.03.25.0358": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
@@ -90,22 +90,22 @@
       "path": "newtonsoft.json/12.0.1",
       "hashPath": "newtonsoft.json.12.0.1.nupkg.sha512"
     },
-    "Cipher/2021.12.28.135": {
+    "Cipher/2022.3.25.358": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
     },
-    "SCLogger/2021.12.28.135": {
+    "SCLogger/2022.3.25.358": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
     },
-    "SocketCore/2021.12.28.135": {
+    "SocketCore/2022.3.25.358": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
     },
-    "Utils/2021.12.28.135": {
+    "Utils/2022.3.25.358": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

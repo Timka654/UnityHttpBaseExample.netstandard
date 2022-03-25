@@ -7,10 +7,10 @@
   "targets": {
     ".NETStandard,Version=v2.0": {},
     ".NETStandard,Version=v2.0/": {
-      "SocketCore.Extensions.Packet/2021.12.28.0135": {
+      "SocketCore.Extensions.Packet/2022.03.25.0358": {
         "dependencies": {
           "NETStandard.Library": "2.0.3",
-          "SocketCore.Extensions.Buffer": "2021.12.28.135"
+          "SocketCore.Extensions.Buffer": "2022.3.25.358"
         },
         "runtime": {
           "SocketCore.Extensions.Packet.dll": {}
@@ -30,15 +30,15 @@
           }
         }
       },
-      "SocketCore/2021.12.28.135": {
+      "SocketCore/2022.3.25.358": {
         "runtime": {
           "SocketCore.dll": {}
         }
       },
-      "SocketCore.Extensions.Buffer/2021.12.28.135": {
+      "SocketCore.Extensions.Buffer/2022.3.25.358": {
         "dependencies": {
           "Newtonsoft.Json": "12.0.1",
-          "SocketCore": "2021.12.28.135"
+          "SocketCore": "2022.3.25.358"
         },
         "runtime": {
           "SocketCore.Extensions.Buffer.dll": {}
@@ -47,7 +47,7 @@
     }
   },
   "libraries": {
-    "SocketCore.Extensions.Packet/2021.12.28.0135": {
+    "SocketCore.Extensions.Packet/2022.03.25.0358": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
@@ -73,12 +73,12 @@
       "path": "newtonsoft.json/12.0.1",
       "hashPath": "newtonsoft.json.12.0.1.nupkg.sha512"
     },
-    "SocketCore/2021.12.28.135": {
+    "SocketCore/2022.3.25.358": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
     },
-    "SocketCore.Extensions.Buffer/2021.12.28.135": {
+    "SocketCore.Extensions.Buffer/2022.3.25.358": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

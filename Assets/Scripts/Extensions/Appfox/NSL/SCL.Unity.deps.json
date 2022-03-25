@@ -7,12 +7,13 @@
   "targets": {
     ".NETStandard,Version=v2.0": {},
     ".NETStandard,Version=v2.0/": {
-      "SCL.Unity/2021.12.28.0135": {
+      "SCL.Unity/2022.03.25.0358": {
         "dependencies": {
-          "Cipher": "2021.12.28.135",
+          "Cipher": "2022.3.25.358",
           "NETStandard.Library": "2.0.3",
-          "SCL": "2021.12.28.135",
-          "SocketCore": "2021.12.28.135"
+          "NSL.TCP.Client": "2022.3.25.358",
+          "SocketClient": "2022.3.25.358",
+          "SocketCore": "2022.3.25.358"
         },
         "runtime": {
           "SCL.Unity.dll": {}
@@ -24,24 +25,41 @@
           "Microsoft.NETCore.Platforms": "1.1.0"
         }
       },
-      "Cipher/2021.12.28.135": {
+      "Cipher/2022.3.25.358": {
         "dependencies": {
-          "SocketCore": "2021.12.28.135"
+          "SocketCore": "2022.3.25.358"
         },
         "runtime": {
           "Cipher.dll": {}
         }
       },
-      "SCL/2021.12.28.135": {
+      "NSL.TCP/2022.3.25.358": {
         "dependencies": {
-          "Cipher": "2021.12.28.135",
-          "SocketCore": "2021.12.28.135"
+          "SocketCore": "2022.3.25.358"
         },
         "runtime": {
-          "SCL.dll": {}
+          "NSL.TCP.dll": {}
         }
       },
-      "SocketCore/2021.12.28.135": {
+      "NSL.TCP.Client/2022.3.25.358": {
+        "dependencies": {
+          "NSL.TCP": "2022.3.25.358",
+          "SocketClient": "2022.3.25.358"
+        },
+        "runtime": {
+          "NSL.TCP.Client.dll": {}
+        }
+      },
+      "SocketClient/2022.3.25.358": {
+        "dependencies": {
+          "Cipher": "2022.3.25.358",
+          "SocketCore": "2022.3.25.358"
+        },
+        "runtime": {
+          "SocketClient.dll": {}
+        }
+      },
+      "SocketCore/2022.3.25.358": {
         "runtime": {
           "SocketCore.dll": {}
         }
@@ -49,7 +67,7 @@
     }
   },
   "libraries": {
-    "SCL.Unity/2021.12.28.0135": {
+    "SCL.Unity/2022.03.25.0358": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
@@ -68,17 +86,27 @@
       "path": "netstandard.library/2.0.3",
       "hashPath": "netstandard.library.2.0.3.nupkg.sha512"
     },
-    "Cipher/2021.12.28.135": {
+    "Cipher/2022.3.25.358": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
     },
-    "SCL/2021.12.28.135": {
+    "NSL.TCP/2022.3.25.358": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
     },
-    "SocketCore/2021.12.28.135": {
+    "NSL.TCP.Client/2022.3.25.358": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "SocketClient/2022.3.25.358": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "SocketCore/2022.3.25.358": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
