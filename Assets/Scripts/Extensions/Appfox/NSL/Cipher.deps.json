@@ -7,10 +7,10 @@
   "targets": {
     ".NETStandard,Version=v2.0": {},
     ".NETStandard,Version=v2.0/": {
-      "Cipher/2021.12.28.0135": {
+      "Cipher/2022.03.25.0358": {
         "dependencies": {
           "NETStandard.Library": "2.0.3",
-          "SocketCore": "2021.12.28.135"
+          "SocketCore": "2022.3.25.358"
         },
         "runtime": {
           "Cipher.dll": {}
@@ -22,7 +22,7 @@
           "Microsoft.NETCore.Platforms": "1.1.0"
         }
       },
-      "SocketCore/2021.12.28.135": {
+      "SocketCore/2022.3.25.358": {
         "runtime": {
           "SocketCore.dll": {}
         }
@@ -30,7 +30,7 @@
     }
   },
   "libraries": {
-    "Cipher/2021.12.28.0135": {
+    "Cipher/2022.03.25.0358": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
@@ -49,7 +49,7 @@
       "path": "netstandard.library/2.0.3",
       "hashPath": "netstandard.library.2.0.3.nupkg.sha512"
     },
-    "SocketCore/2021.12.28.135": {
+    "SocketCore/2022.3.25.358": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

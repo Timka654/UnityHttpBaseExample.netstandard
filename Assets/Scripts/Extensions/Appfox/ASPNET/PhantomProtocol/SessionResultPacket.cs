@@ -18,10 +18,10 @@ namespace Appfox.Unity.AspNetCore.Phantom
                     client.connection.SetState(HubConnectionState.Connected);
                     break;
                 case 0:
-                    client.connection.ForceClose(new Exception($"Current hub path not found"));
+                    client.connection.ForceStop(new Exception($"Current hub path not found"));
                     break;
                 case 1:
-                    client.connection.ForceClose(new Exception($"Cannot sign by current data"));
+                    client.connection.ForceStop(new Exception($"Cannot sign by current data"));
                     break;
                 default:
                     break;

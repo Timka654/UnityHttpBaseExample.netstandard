@@ -30,10 +30,10 @@ namespace Appfox.Unity.AspNetCore.Phantom.Network.Packets
                     client.connection.SetState(HubConnectionState.Connected);
                     break;
                 case 0:
-                    client.connection.ForceClose(new Exception($"Current hub path not found"));
+                    client.connection.ForceStop(new Exception($"Current hub path not found"));
                     break;
                 case 1:
-                    client.connection.ForceClose(new Exception($"Cannot sign by current data {{{phantomHubConnection.Path}, {phantomHubConnection.Session}, {await phantomHubConnection.GetAccessToken()}}}"));
+                    client.connection.ForceStop(new Exception($"Cannot sign by current data {{{phantomHubConnection.Path}, {phantomHubConnection.Session}, {await phantomHubConnection.GetAccessToken()}}}"));
                     break;
                 default:
                     break;

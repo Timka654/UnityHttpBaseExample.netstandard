@@ -25,19 +25,19 @@ namespace Appfox.Unity.AspNetCore.Phantom
 
         internal PhantomConnectionOptions Options => options;
 
-        internal Task<string> GetAccessToken() => (options.AccessTokenProvider ?? new Func<Task<string>>(()=> Task.FromResult(default(string))))();
+        internal Task<string> GetAccessToken() => (options.AccessTokenProvider ?? new Func<Task<string>>(() => Task.FromResult(default(string))))();
 
-        public static readonly TimeSpan DefaultServerTimeout = TimeSpan.FromSeconds(30.0);
+        public static readonly TimeSpan DefaultConnectionTimeout = TimeSpan.FromSeconds(30.0);
 
         public static readonly TimeSpan DefaultHandshakeTimeout = TimeSpan.FromSeconds(15.0);
 
         public static readonly TimeSpan DefaultKeepAliveInterval = TimeSpan.FromSeconds(15.0);
 
-        public TimeSpan ServerTimeout
+        public TimeSpan ConnectionTimeout
         {
             get;
             set;
-        } = DefaultServerTimeout;
+        } = DefaultConnectionTimeout;
 
 
         public TimeSpan KeepAliveInterval
@@ -53,25 +53,38 @@ namespace Appfox.Unity.AspNetCore.Phantom
             set;
         } = DefaultHandshakeTimeout;
 
-        public event Func<Exception, Task> Closed = (_) => Task.CompletedTask;
-        public event Func<string, Task> Reconnected = (_) => Task.CompletedTask;
-        public event Func<Exception, Task> Reconnecting = (_) => Task.CompletedTask;
+        public event Func<Exception, Task> OnException = (_) => Task.CompletedTask;
+
+        public event Action<HubConnectionState> StateChanged = (_) => { };
 
         private PhantomNetworkClient network;
 
         private HubConnectionState state = HubConnectionState.Disconnected;
 
-        public HubConnectionState State { get => state; internal set => state = value; }
+        public HubConnectionState State
+        {
+            get => state;
+            internal set
+            {
+                state = value;
+                StateChanged(value);
+            }
+        }
 
         public PhantomHubConnection(PhantomConnectionOptions options)
         {
             this.options = options;
 
             this.network = new PhantomNetworkClient(this);
+
+            this.network.OnException += async (ex, client) => await OnException(ex);
         }
 
-
         public async Task StartAsync()
+        {
+            await StartAsync(false);
+        }
+        internal async Task StartAsync(bool reconnect)
         {
             if (state == HubConnectionState.Connected)
                 return;
@@ -81,11 +94,15 @@ namespace Appfox.Unity.AspNetCore.Phantom
                 if (!await connectLocker.WaitAsync(0))
                     return;
 
-                forceClosed = false;
-                state = HubConnectionState.Connecting;
+                forceStopped = false;
+
+                if (!reconnect)
+                    state = HubConnectionState.Connecting;
 
                 using (HttpClient hc = new HttpClient())
                 {
+                    hc.Timeout = HandshakeTimeout;
+
                     string endUrl = string.Empty;
 
                     if (!string.IsNullOrWhiteSpace(Session))
@@ -93,15 +110,20 @@ namespace Appfox.Unity.AspNetCore.Phantom
 
                     if (options.AccessTokenProvider != null)
                     {
-                        if (string.IsNullOrWhiteSpace(endUrl))
-                            endUrl = "?";
-                        else
-                            endUrl += $"&";
+                        var token = await options.AccessTokenProvider();
 
-                        endUrl += $"access_token={ await options.AccessTokenProvider()}";
+                        if (!string.IsNullOrWhiteSpace(token))
+                        {
+                            if (string.IsNullOrWhiteSpace(endUrl))
+                                endUrl = "?";
+                            else
+                                endUrl += $"&";
+
+                            endUrl += $"access_token={ await options.AccessTokenProvider()}";
+                        }
                     }
 
-                    HttpRequestMessage msg = new HttpRequestMessage(HttpMethod.Get, options.Url + endUrl);
+                    HttpRequestMessage msg = new HttpRequestMessage(HttpMethod.Get, await options.Url() + endUrl);
 
                     var response = await hc.SendAsync(msg);
 
@@ -129,9 +151,8 @@ namespace Appfox.Unity.AspNetCore.Phantom
             {
                 if (authLocker.CurrentCount == 0)
                     authLocker.Release();
-
-                state = HubConnectionState.Disconnected;
-                await Closed(ex);
+                if (!reconnect)
+                    SetState(HubConnectionState.Disconnected, ex);
             }
 
             connectLocker.Release();
@@ -139,25 +160,57 @@ namespace Appfox.Unity.AspNetCore.Phantom
 
         public async Task StopAsync()
         {
-            ForceClose(null);
+            ForceStop(null);
 
             await Task.CompletedTask;
         }
 
-        public void Dispose()
+        bool forceStopped = false;
+
+        internal bool ForceStoppedState => forceStopped;
+
+        internal void ForceStop(Exception err)
         {
-            disposed = true;
+            forceStopped = true;
+
+            if (network.client?.GetState() == true)
+            {
+                network.client.Disconnect();
+
+                if (err != null)
+                    OnException(err);
+            }
+            else
+                SetState(HubConnectionState.Disconnected, err);
         }
 
-        bool disposed = false;
+        public void Dispose() => ForceStop(null);
 
-        bool forceClosed = false;
+        public async Task DisposeAsync() => await Task.Run(() => Dispose());
 
-        internal bool ForceClosedState => forceClosed;
+        #region On
 
-        public async Task DisposeAsync()
+        private Dictionary<string, Func<InputPacketBuffer, Task>> methodDelegates = new Dictionary<string, Func<InputPacketBuffer, Task>>();
+
+        internal async void Invoke(InputPacketBuffer packet)
         {
-            await Task.Run(() => Dispose());
+            using (var ip = new InputPacketBuffer())
+            {
+                packet.CopyTo(ip);
+
+                ip.Position = 0;
+
+                string methodName = ip.ReadString16().ToLower();
+
+                if (methodDelegates.TryGetValue($"{methodName}_{ip.ReadInt32()}", out var func))
+                {
+                    await func(ip);
+                }
+                else
+                {
+                    ForceStop(new Exception($"Received method {methodName} not found with args"));
+                }
+            }
         }
 
         public void On(string methodName, Action handle)
@@ -170,7 +223,7 @@ namespace Appfox.Unity.AspNetCore.Phantom
                 }
                 catch (Exception ex)
                 {
-                    ForceClose(ex);
+                    ForceStop(ex);
                 }
 
                 return Task.CompletedTask;
@@ -187,19 +240,74 @@ namespace Appfox.Unity.AspNetCore.Phantom
                 }
                 catch (Exception ex)
                 {
-                    ForceClose(ex);
+                    ForceStop(ex);
                 }
 
                 return Task.CompletedTask;
             });
         }
 
+        public void On<T1, T2>(string methodName, Action<T1, T2> handle)
+        {
+            methodDelegates.Add($"{methodName.ToLower()}_2", (_) =>
+            {
+                try
+                {
+                    handle(_.ReadJson16<T1>(), _.ReadJson16<T2>());
+                }
+                catch (Exception ex)
+                {
+                    ForceStop(ex);
+                }
+
+                return Task.CompletedTask;
+            });
+        }
+
+        public void On<T1, T2, T3>(string methodName, Action<T1, T2, T3> handle)
+        {
+            methodDelegates.Add($"{methodName.ToLower()}_3", (_) =>
+            {
+                try
+                {
+                    handle(_.ReadJson16<T1>(), _.ReadJson16<T2>(), _.ReadJson16<T3>());
+                }
+                catch (Exception ex)
+                {
+                    ForceStop(ex);
+                }
+
+                return Task.CompletedTask;
+            });
+        }
+
+        public void On<T1, T2, T3, T4>(string methodName, Action<T1, T2, T3, T4> handle)
+        {
+            methodDelegates.Add($"{methodName.ToLower()}_4", (_) =>
+            {
+                try
+                {
+                    handle(_.ReadJson16<T1>(), _.ReadJson16<T2>(), _.ReadJson16<T3>(), _.ReadJson16<T4>());
+                }
+                catch (Exception ex)
+                {
+                    ForceStop(ex);
+                }
+
+                return Task.CompletedTask;
+            });
+        }
+
+        #endregion
+
+        #region Send
+
         public async Task SendAsync(string methodName)
         {
             await SendAsync(methodName, new object[] { });
         }
 
-        public async Task SendAsync(string methodName, object[] args)
+        public async Task SendAsync(string methodName, params object[] args)
         {
             if (state != HubConnectionState.Connected)
                 throw new Exception($"Current state is {state}, must be {nameof(HubConnectionState.Connected)} for send");
@@ -215,60 +323,27 @@ namespace Appfox.Unity.AspNetCore.Phantom
             });
         }
 
-        public async Task SendAsync<T1>(string methodName, T1 arg1)
-        {
-            await SendAsync(methodName, new object[] { arg1 });
-        }
-
-        internal void ForceClose(Exception err)
-        {
-            forceClosed = true;
-            Closed(err);
-            if (network.client?.GetState() == true)
-                network.client.Disconnect();
-            else
-                SetState(HubConnectionState.Disconnected);
-        }
+        #endregion
 
         private SemaphoreSlim connectLocker = new SemaphoreSlim(1);
 
         private SemaphoreSlim authLocker = new SemaphoreSlim(0);
 
-        internal async void SetState(HubConnectionState state)
+        internal void SetState(HubConnectionState state, Exception ex = null)
         {
-            this.state = state;
+            if (this.State == state)
+                return;
+
+            this.State = state;
 
             if (state == HubConnectionState.Connected)
-            {
                 network.retryCount = 0;
-            }
+            else if (state == HubConnectionState.Disconnected && ex != null)
+                OnException(ex);
+
 
             if (authLocker.CurrentCount == 0)
                 authLocker.Release();
-        }
-
-        private Dictionary<string, Func<InputPacketBuffer, Task>> methodDelegates = new Dictionary<string, Func<InputPacketBuffer, Task>>();
-
-        internal async void Invoke(InputPacketBuffer packet)
-        {
-            using (var ip = new InputPacketBuffer())
-            {
-                packet.CopyTo(ip);
-
-                ip.Position = 0;
-
-                string methodName = ip.ReadString16().ToLower();
-
-                if (methodDelegates.TryGetValue($"{methodName}_{ip.ReadInt32()}", out var func))
-                {
-                    SCL.Unity.ThreadHelper.InvokeOnMain(() => Debug.LogError($"phantom debug - method {methodName} try invoke"));
-                    await func(ip);
-                }
-                else
-                {
-                    ForceClose(new Exception($"Received method {methodName} not found with args"));
-                }
-            }
         }
 
         public class PhantomRequestResult

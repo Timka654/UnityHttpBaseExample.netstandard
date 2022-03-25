@@ -1,5 +1,7 @@
 ﻿using Appfox.Unity.AspNetCore.Phantom.Network.Packets;
+using NSL.TCP.Client;
 using SCL;
+using SocketClient;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,7 +17,7 @@ namespace Appfox.Unity.AspNetCore.Phantom.Network
     {
         ClientOptions<PhantomSocketNetworkClient> clientOptions;
 
-        internal SocketClient<PhantomSocketNetworkClient, ClientOptions<PhantomSocketNetworkClient>> client;
+        internal TCPNetworkClient<PhantomSocketNetworkClient, ClientOptions<PhantomSocketNetworkClient>> client;
 
         public async Task InitializeClient(PhantomRequestResult data)
         {
@@ -32,13 +34,6 @@ namespace Appfox.Unity.AspNetCore.Phantom.Network
 
             var ip = IPAddress.Parse(dns.ToString());
 
-            clientOptions.ProtocolType = System.Net.Sockets.ProtocolType.Tcp;
-            clientOptions.AddressFamily = ip.AddressFamily;
-            clientOptions.IpAddress = ip.ToString();
-            clientOptions.Port = connectUrl.Port;
-
-            clientOptions.ReceiveBufferSize = 1024;
-
             clientOptions.OnClientConnectEvent += ClientOptions_OnClientConnectEvent;
             clientOptions.OnClientDisconnectEvent += ClientOptions_OnClientDisconnectEvent;
             clientOptions.OnExceptionEvent += ClientOptions_OnExceptionEvent;
@@ -48,13 +43,26 @@ namespace Appfox.Unity.AspNetCore.Phantom.Network
 
             phantomHubConnection.Options.CipherProvider.SetProvider(clientOptions);
 
-            client = new SocketClient<PhantomSocketNetworkClient, ClientOptions<PhantomSocketNetworkClient>>(clientOptions);
+            client = new TCPNetworkClient<PhantomSocketNetworkClient, ClientOptions<PhantomSocketNetworkClient>>(clientOptions);
 
-            await client.ConnectAsync();
+            bool oldConnectionState = SuccessConnected;
+
+            SuccessConnected = false;
+
+            if (!await client.ConnectAsync(ip.ToString(),
+                connectUrl.Port,
+                (int)phantomHubConnection.ConnectionTimeout.TotalMilliseconds) && oldConnectionState)
+            {
+                SuccessConnected = true;
+                ClientOptions_OnClientDisconnectEvent(null);
+            }
         }
 
         internal int retryCount = 0;
+
         private PhantomHubConnection phantomHubConnection;
+
+        public event Action<Exception, PhantomSocketNetworkClient> OnException = (e, c) => { };
 
         public PhantomNetworkClient(PhantomHubConnection phantomHubConnection)
         {
@@ -63,40 +71,60 @@ namespace Appfox.Unity.AspNetCore.Phantom.Network
 
         private async void ClientOptions_OnClientDisconnectEvent(PhantomSocketNetworkClient client)
         {
-            var oldState = phantomHubConnection.State;
+            SuccessConnected = CanReconnection();
 
-            phantomHubConnection.State = HubConnectionState.Disconnected;
-
-            if (oldState == HubConnectionState.Connected && !phantomHubConnection.ForceClosedState && phantomHubConnection.Options.RetryPolicy != null)
+            if (SuccessConnected)
             {
-                var elapse = phantomHubConnection.Options.RetryPolicy.NextRetryDelay(new RetryContext() { ElapsedTime = TimeSpan.Zero, PreviousRetryCount = retryCount, RetryReason = null });
-                retryCount++;
-                if (elapse.HasValue)
+                var policy = await phantomHubConnection.Options.RetryPolicy();
+
+                if (policy != null)
                 {
-                    await Task.Delay(elapse.Value);
-                    reStartAsync();
+                    var elapse = policy.NextRetryDelay(new RetryContext()
+                    {
+                        ElapsedTime = TimeSpan.Zero,
+                        PreviousRetryCount = retryCount,
+                        RetryReason = null
+                    });
+
+                    retryCount++;
+
+                    if (elapse.HasValue)
+                    {
+                        phantomHubConnection.SetState(HubConnectionState.Reconnecting);
+
+                        while (CanReconnection() && !this.client.GetState())
+                        {
+                            await Task.Delay(elapse.Value);
+
+                            await phantomHubConnection.StartAsync(true);
+                        }
+
+                        if (this.client.GetState())
+                            return;
+                    }
                 }
             }
-            else
-            {
-                phantomHubConnection.SetState(HubConnectionState.Disconnected);
-            }
+
+            phantomHubConnection.SetState(HubConnectionState.Disconnected);
+            phantomHubConnection.ForceStop(null);
         }
-        private async void reStartAsync()
-        {
-            await phantomHubConnection.StartAsync();
-        }
+
+        private bool SuccessConnected = false;
+
+        private bool CanReconnection() =>
+            SuccessConnected &&
+            !phantomHubConnection.ForceStoppedState &&
+            phantomHubConnection.Options.RetryPolicy != null;
 
         private void ClientOptions_OnClientConnectEvent(PhantomSocketNetworkClient client)
         {
+            SuccessConnected = client.PingPongEnabled = true;
+
             client.connection = phantomHubConnection;
+
             SessionPacket.Send(client, phantomHubConnection.Path, phantomHubConnection.Session);
-
-        }
-        private void ClientOptions_OnExceptionEvent(Exception ex, PhantomSocketNetworkClient client)
-        {
-            Debug.LogError(ex.ToString());
         }
 
+        private void ClientOptions_OnExceptionEvent(Exception ex, PhantomSocketNetworkClient client) => OnException(ex, client);
     }
 }

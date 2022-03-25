@@ -29,8 +29,14 @@ namespace Appfox.Unity.AspNetCore.Phantom
             options = new PhantomConnectionOptions();
         }
         public PhantomHubConnectionBuilder WithUrl(string url)
+            => WithUrl(() => url);
+
+        public PhantomHubConnectionBuilder WithUrl(Func<string> urlHandle)
+            => WithUrl(() => Task.FromResult(urlHandle()));
+
+        public PhantomHubConnectionBuilder WithUrl(Func<Task<string>> urlHandle)
         {
-            options.Url = url;
+            options.Url = urlHandle;
 
             return this;
         }
@@ -38,6 +44,11 @@ namespace Appfox.Unity.AspNetCore.Phantom
         public PhantomHubConnectionBuilder WithUrl(string url, Action<PhantomConnectionOptions> configureConnection)
         {
             return WithUrl(url).WithOptions(configureConnection);
+        }
+
+        public PhantomHubConnectionBuilder WithUrl(Func<string> urlHandle, Action<PhantomConnectionOptions> configureConnection)
+        {
+            return WithUrl(urlHandle).WithOptions(configureConnection);
         }
 
         public PhantomHubConnectionBuilder WithOptions(Action<PhantomConnectionOptions> configureConnection)
@@ -48,6 +59,12 @@ namespace Appfox.Unity.AspNetCore.Phantom
         }
 
         public PhantomHubConnectionBuilder WithAutomaticReconnect(IRetryPolicy retryPolicy)
+            => WithAutomaticReconnect(() => retryPolicy);
+
+        public PhantomHubConnectionBuilder WithAutomaticReconnect(Func<IRetryPolicy> retryPolicy)
+            => WithAutomaticReconnect(() => Task.FromResult(retryPolicy()));
+
+        public PhantomHubConnectionBuilder WithAutomaticReconnect(Func<Task<IRetryPolicy>> retryPolicy)
         {
             options.RetryPolicy = retryPolicy;
 
